@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Dashboard</title>
+</head>
+
+<body>
+  <h1>Dashboard</h1>
+  <form id="transaction-form">
+    <input type="text" id="title" placeholder="Title" required />
+    <input type="number" id="amount" placeholder="Amount" required />
+    <button type="submit">Add</button>
+  </form>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Amount</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="transaction-table"></tbody>
+  </table>
+  <button onclick="logout()">Logout</button>
+
+  <script>
+    const userId = localStorage.getItem('userId');
+    if (!userId) location.href = '/login.html';
+
+    async function fetchTransactions() {
+      const res = await fetch(`/api/transactions`);
+      const data = await res.json();
+      const tbody = document.getElementById('transaction-table');
+      tbody.innerHTML = '';
+      data.forEach(tx => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${tx.title}</td><td>${tx.amount}</td><td>
+          <button onclick="deleteTx(${tx.id})">Delete</button></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('transaction-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('title').value;
+      const amount = parseInt(document.getElementById('amount').value);
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: parseInt(userId), title, amount })
+      });
+      if (res.ok) fetchTransactions();
+    });
+
+    async function deleteTx(id) {
+      await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' });
+      fetchTransactions();
+    }
+
+    function logout() {
+      localStorage.removeItem('userId');
+      location.href = '/login.html';
+    }
+
+    fetchTransactions();
+  </script>
+</body>
+
+</html>
