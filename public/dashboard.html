@@ -48,7 +48,7 @@
       const res = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: parseInt(userId), title, amount })
+        body: JSON.stringify({ title, amount })
       });
       if (res.ok) fetchTransactions();
     });
@@ -58,10 +58,11 @@
       fetchTransactions();
     }
 
-    function logout() {
-      localStorage.removeItem('userId');
+    async function logout() {
+      await fetch('/api/auth/logout');
       location.href = '/login.html';
     }
+
 
     fetchTransactions();
   </script>

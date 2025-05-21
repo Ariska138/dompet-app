@@ -1,6 +1,6 @@
 // 9. pages/api/transactions/index.js
 import { db } from '@/drizzle/db';
-import { transactions } from '@/drizzle/schema';
+import { transactions } from '@/src/db/schema';
 import { transactionSchema } from '@/utils/zodSchemas';
 import { eq } from 'drizzle-orm';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -27,11 +27,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'DELETE') {
-
     const id = parseInt(Array.isArray(req.query.id) ? req.query.id[0] : req.query.id || '');
+    const existing = await db.select().from(transactions).where(eq(transactions.id, id));
+    if (!existing.length || existing[0].userId !== userId) {
+      return res.status(403).json({ error: 'Unauthorized delete' });
+    }
     await db.delete(transactions).where(eq(transactions.id, id));
     return res.status(200).json({ message: 'Deleted' });
   }
+
 
   res.status(405).end();
 }

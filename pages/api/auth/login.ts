@@ -1,6 +1,6 @@
 // 5. pages/api/auth/login.js
 import { db } from '@/drizzle/db';
-import { users } from '@/drizzle/schema';
+import { users } from '@/src/db/schema';
 import { loginSchema } from '@/utils/zodSchemas';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
