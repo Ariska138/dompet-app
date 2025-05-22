@@ -25,8 +25,22 @@
   <button onclick="logout()">Logout</button>
 
   <script>
-    const userId = localStorage.getItem('userId');
-    if (!userId) location.href = '/login.html';
+    let currentUserId = null;
+
+    async function checkAuth() {
+      const res = await fetch('/api/auth/me');
+      if (!res.ok) {
+        location.href = '/login.html';
+        return;
+      }
+      const data = await res.json();
+      currentUserId = data.user.userId; // Simpan userId jika butuh
+    }
+
+    checkAuth().then(() => {
+      fetchTransactions();
+    });
+
 
     async function fetchTransactions() {
       const res = await fetch(`/api/transactions`);
@@ -63,8 +77,6 @@
       location.href = '/login.html';
     }
 
-
-    fetchTransactions();
   </script>
 </body>
 
