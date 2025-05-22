@@ -1,5 +1,4 @@
-// 5. pages/api/auth/login.js
-import { db } from '@/drizzle/db';
+import { db } from '@/src/db';
 import { users } from '@/src/db/schema';
 import { loginSchema } from '@/utils/zodSchemas';
 import bcrypt from 'bcrypt';

@@ -1,15 +1,7 @@
-// scripts/seed.ts
-// import { drizzle } from 'drizzle-orm/node-postgres';
-// import { Pool } from 'pg';
 import 'dotenv/config';
 import { users, transactions } from '@/src/db/schema'; // ganti path sesuai project kamu
 import bcrypt from 'bcrypt';
-
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-
-const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle({ client: sql });
+import { db } from '@/src/db';
 
 async function seed() {
   console.log('Seeding started...');

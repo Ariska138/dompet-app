@@ -1,5 +1,4 @@
-// 4. pages/api/auth/register.js
-import { db } from '@/drizzle/db';
+import { db } from '@/src/db';
 import { users } from '@/src/db/schema';
 import { registerSchema } from '@/utils/zodSchemas';
 import bcrypt from 'bcrypt';

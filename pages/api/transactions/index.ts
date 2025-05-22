@@ -1,5 +1,4 @@
-// 9. pages/api/transactions/index.js
-import { db } from '@/drizzle/db';
+import { db } from '@/src/db';
 import { transactions } from '@/src/db/schema';
 import { transactionSchema } from '@/utils/zodSchemas';
 import { eq } from 'drizzle-orm';
