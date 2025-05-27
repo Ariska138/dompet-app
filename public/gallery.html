@@ -1,0 +1,169 @@
+<!-- public/gallery.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Gallery</title>
+  <link rel="stylesheet" href="/styles/globals.css">
+  <link rel="stylesheet" href="/styles/Home.module.css">
+  <style>
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .gallery-item {
+      position: relative;
+      border: 1px solid var(--gray-alpha-200);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .gallery-item .actions {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .gallery-item .actions a,
+    .gallery-item .actions button {
+      background: var(--foreground);
+      color: var(--background);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <main class="main">
+      <h1>Image Gallery</h1>
+
+      <!-- Form Upload -->
+      <div>
+        <h2>Upload Image</h2>
+        <form id="uploadForm">
+          <input type="file" id="fileInput" accept="image/*" required>
+          <button type="submit" class="primary">Upload</button>
+        </form>
+      </div>
+
+      <!-- Galeri Gambar -->
+      <div class="gallery" id="gallery"></div>
+
+      <!-- Tombol Logout -->
+      <div class="ctas">
+        <button class="secondary" onclick="handleLogout()">Logout</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Fungsi untuk memuat daftar gambar
+    async function loadGallery() {
+      try {
+        const response = await fetch('/api/files');
+        if (!response.ok) throw new Error('Failed to fetch files');
+        const files = await response.json();
+        const gallery = document.getElementById('gallery');
+        gallery.innerHTML = '';
+
+        // Filter hanya file gambar
+        const images = files.filter(file => file.key.match(/\.(jpg|jpeg|png|gif)$/i));
+        for (const file of images) {
+          // Dapatkan pre-signed URL untuk gambar
+          const urlResponse = await fetch(`/api/files?key=${encodeURIComponent(file.key)}`);
+          if (!urlResponse.ok) continue;
+          const { url } = await urlResponse.json();
+
+          const div = document.createElement('div');
+          div.className = 'gallery-item';
+          div.innerHTML = `
+            <img src="${url}" alt="${file.key.split('/').pop()}">
+            <div class="actions">
+              <a href="${url}" target="_blank">Download</a>
+              <button onclick="deleteFile('${file.key}')">Delete</button>
+            </div>
+          `;
+          gallery.appendChild(div);
+        }
+      } catch (error) {
+        alert('Error loading gallery: ' + error.message);
+      }
+    }
+
+    // Fungsi untuk unggah gambar
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      if (!file) return alert('Please select an image');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch('/api/files', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!response.ok) throw new Error('Failed to upload image');
+        alert('Image uploaded successfully');
+        fileInput.value = '';
+        loadGallery();
+      } catch (error) {
+        alert('Error uploading image: ' + error.message);
+      }
+    });
+
+    // Fungsi untuk hapus gambar
+    async function deleteFile(key) {
+      if (!confirm('Are you sure you want to delete this image?')) return;
+
+      try {
+        const response = await fetch(`/api/files?key=${encodeURIComponent(key)}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Failed to delete image');
+        alert('Image deleted successfully');
+        loadGallery();
+      } catch (error) {
+        alert('Error deleting image: ' + error.message);
+      }
+    }
+
+    // Fungsi untuk logout
+    async function handleLogout() {
+      try {
+        const response = await fetch('/api/auth/logout', { method: 'POST' });
+        if (response.ok) {
+          window.location.href = '/login.html';
+        } else {
+          throw new Error('Failed to logout');
+        }
+      } catch (error) {
+        alert('Error logging out: ' + error.message);
+      }
+    }
+
+    // Muat galeri saat halaman dimuat
+    window.onload = loadGallery;
+  </script>
+</body>
+
+</html>

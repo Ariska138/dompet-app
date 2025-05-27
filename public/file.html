@@ -1,0 +1,174 @@
+<!-- public/files.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Management</title>
+  <link rel="stylesheet" href="/styles/globals.css">
+  <link rel="stylesheet" href="/styles/Home.module.css">
+</head>
+
+<body>
+  <div class="page">
+    <main class="main">
+      <h1>File Management</h1>
+
+      <!-- Form Upload File -->
+      <div>
+        <h2>Upload File</h2>
+        <form id="uploadForm">
+          <input type="file" id="fileInput" required>
+          <button type="submit" class="primary">Upload</button>
+        </form>
+      </div>
+
+      <!-- Form Update File -->
+      <div>
+        <h2>Update File</h2>
+        <form id="updateForm">
+          <input type="text" id="updateKey" placeholder="File Key (e.g., uploads/1/filename)" required>
+          <input type="file" id="updateFileInput" required>
+          <button type="submit" class="primary">Update</button>
+        </form>
+      </div>
+
+      <!-- Daftar File -->
+      <div>
+        <h2>Your Files</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>Size (KB)</th>
+              <th>Last Modified</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="fileList"></tbody>
+        </table>
+      </div>
+
+      <!-- Tombol Logout -->
+      <div class="ctas">
+        <button class="secondary" onclick="handleLogout()">Logout</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Fungsi untuk memuat daftar file
+    async function loadFiles() {
+      try {
+        const response = await fetch('/api/files');
+        if (!response.ok) throw new Error('Failed to fetch files');
+        const files = await response.json();
+        const fileList = document.getElementById('fileList');
+        fileList.innerHTML = '';
+
+        files.forEach(file => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${file.key.split('/').pop()}</td>
+            <td>${(file.size / 1024).toFixed(2)}</td>
+            <td>${new Date(file.lastModified).toLocaleString()}</td>
+            <td>
+              <a href="/api/files?key=${encodeURIComponent(file.key)}" target="_blank">Download</a>
+              <button onclick="deleteFile('${file.key}')">Delete</button>
+            </td>
+          `;
+          fileList.appendChild(row);
+        });
+      } catch (error) {
+        alert('Error loading files: ' + error.message);
+      }
+    }
+
+    // Fungsi untuk unggah file
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      if (!file) return alert('Please select a file');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch('/api/files', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!response.ok) throw new Error('Failed to upload file');
+        alert('File uploaded successfully');
+        fileInput.value = ''; // Reset input
+        loadFiles(); // Refresh daftar file
+      } catch (error) {
+        alert('Error uploading file: ' + error.message);
+      }
+    });
+
+    // Fungsi untuk update file
+    document.getElementById('updateForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const key = document.getElementById('updateKey').value;
+      const fileInput = document.getElementById('updateFileInput');
+      const file = fileInput.files[0];
+      if (!file || !key) return alert('Please provide file and key');
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('key', key);
+
+      try {
+        const response = await fetch('/api/files', {
+          method: 'PUT',
+          body: formData,
+        });
+        if (!response.ok) throw new Error('Failed to update file');
+        alert('File updated successfully');
+        fileInput.value = '';
+        document.getElementById('updateKey').value = '';
+        loadFiles();
+      } catch (error) {
+        alert('Error updating file: ' + error.message);
+      }
+    });
+
+    // Fungsi untuk hapus file
+    async function deleteFile(key) {
+      if (!confirm('Are you sure you want to delete this file?')) return;
+
+      try {
+        const response = await fetch(`/api/files?key=${encodeURIComponent(key)}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Failed to delete file');
+        alert('File deleted successfully');
+        loadFiles();
+      } catch (error) {
+        alert('Error deleting file: ' + error.message);
+      }
+    }
+
+    // Fungsi untuk logout
+    async function handleLogout() {
+      try {
+        const response = await fetch('/api/auth/logout', { method: 'POST' });
+        if (response.ok) {
+          window.location.href = '/login.html';
+        } else {
+          throw new Error('Failed to logout');
+        }
+      } catch (error) {
+        alert('Error logging out: ' + error.message);
+      }
+    }
+
+    // Muat daftar file saat halaman dimuat
+    window.onload = loadFiles;
+  </script>
+</body>
+
+</html>
