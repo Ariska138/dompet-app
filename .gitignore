@@ -42,3 +42,5 @@ next-env.d.ts
 
 project-info.txt
 .gppignore
+*.builder.json
+STEPCODE.md
